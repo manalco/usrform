@@ -1,0 +1,80 @@
+plugin: "add"
+"@form_field_content@":
+  account:
+      weight: -10
+      region: content
+    contact:
+      weight: 5
+      region: content
+    field_usr_address:
+      weight: 13
+      settings:
+        size: 60
+        placeholder: ''
+      third_party_settings: {  }
+      type: string_textfield
+      region: content
+    field_usr_birthday:
+      weight: 10
+      settings: {  }
+      third_party_settings: {  }
+      type: datetime_default
+      region: content
+    field_usr_city:
+      weight: 11
+      settings:
+        size: 60
+        placeholder: ''
+      third_party_settings: {  }
+      type: string_textfield
+      region: content
+    field_usr_first_name:
+      weight: 7
+      settings:
+        size: 60
+        placeholder: ''
+      third_party_settings: {  }
+      type: string_textfield
+      region: content
+    field_usr_gender:
+      weight: 9
+      settings: {  }
+      third_party_settings: {  }
+      type: options_select
+      region: content
+    field_usr_last_name:
+      weight: 8
+      settings:
+        size: 60
+        placeholder: ''
+      third_party_settings: {  }
+      type: string_textfield
+      region: content
+    field_usr_phone:
+      weight: 12
+      settings:
+        size: 60
+        placeholder: ''
+      third_party_settings: {  }
+      type: string_textfield
+      region: content
+    language:
+      weight: 0
+      region: content
+    timezone:
+      weight: 6
+      region: content
+    user_picture:
+      type: image_image
+      settings:
+        progress_indicator: throbber
+        preview_image_style: thumbnail
+      third_party_settings: {  }
+      weight: -1
+      region: content
+path: ["content"]
+source: "%id%"
+node_forms:
+  actions:
+    core.entity_form_display.user.user.default.yml:
+      value: "@form_field_content@"
