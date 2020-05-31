@@ -1,0 +1,8 @@
+name: "Custom User Form"
+description: "Creates a user."
+package: Custom
+
+type: module
+core: 8.x
+
+php: "7.2"
