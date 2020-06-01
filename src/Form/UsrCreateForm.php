@@ -4,8 +4,6 @@ namespace Drupal\usrform\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\ReplaceCommand;
 
 class UsrCreateForm extends FormBase {
 
@@ -20,6 +18,7 @@ class UsrCreateForm extends FormBase {
 
     $step = $form_state->get('step');
 
+    //Validate if Back and Next buttons were clicked
     if ($trigger = $form_state->getTriggeringElement()) {
       switch ($trigger['#name']) {
         case 'Next':
@@ -47,7 +46,7 @@ class UsrCreateForm extends FormBase {
 
     $form['form-wrapper']['step_1']['first_name'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('First Name'.$step),
+      '#title' => $this->t('First Name'),
       '#required' => TRUE,
     ];
 
@@ -146,6 +145,7 @@ class UsrCreateForm extends FormBase {
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
+    //Validating birth date is a past date
     $birthday = $form_state->getValue('birthday');
     if(strtotime($birthday) > strtotime(date('m/d/Y'))){
       $form_state->setErrorByName('birthday', $this->t('<b>Date of Birth</b> must not be a future date.'));
@@ -156,11 +156,13 @@ class UsrCreateForm extends FormBase {
     $usr = \Drupal\user\Entity\User::create();
     $username = $this->sanitize($form_state->getValue('first_name').$form_state->getValue('last_name'));
 
+    //Check if username exists
     $ids = \Drupal::entityQuery('user')
       ->condition('name', $username)
       ->range(0, 1)
       ->execute();
     if(!empty($ids)){
+      //Username exists, generating a new one
       $i = 0;
       while (!empty($ids)) {
         $i++;
@@ -172,11 +174,13 @@ class UsrCreateForm extends FormBase {
       }
     }
 
+    //Creating user
     $usr->setPassword($username);
     $usr->enforceIsNew();
     $usr->setEmail($form_state->getValue('email'));
     $usr->setUsername($username);
 
+    //Set user custom fields
     $usr->set("field_usr_first_name", $form_state->getValue('first_name'));
     $usr->set("field_usr_last_name", $form_state->getValue('last_name'));
     $usr->set("field_usr_gender", $form_state->getValue('gender'));
@@ -185,14 +189,17 @@ class UsrCreateForm extends FormBase {
     $usr->set("field_usr_phone", $form_state->getValue('phone'));
     $usr->set("field_usr_address", $form_state->getValue('address'));
 
+    //Activate and save user
     $usr->activate();
     $res = $usr->save();
 
+    //Notifying username and password
     $messenger = \Drupal::messenger();
     $messenger->addMessage("The user has been created with 'username' and 'password': ".$username);
   }
 
   private function sanitize($str){
+    //Validate username is alphanumerical only
     return preg_replace('/[^A-Za-z0-9]/', '', strtolower($str));
   }
 
