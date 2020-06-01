@@ -41,12 +41,13 @@ class UsrCreateForm extends FormBase {
     $form['form-wrapper']['step_1'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Step 1 of 2'),
-      '#access' => ($step == 1)? TRUE : FALSE,
+      '#prefix' => ($step == 1)? '<div>':'<div class="hidden">',
+      '#suffix' => '</div>',
     ];
 
     $form['form-wrapper']['step_1']['first_name'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('First Name'),
+      '#title' => $this->t('First Name'.$step),
       '#required' => TRUE,
     ];
 
@@ -78,13 +79,20 @@ class UsrCreateForm extends FormBase {
     $form['form-wrapper']['step_2'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Step 2 of 2'),
-      '#access' => ($step == 2)? TRUE : FALSE,
+      '#prefix' => ($step == 2)? '<div>':'<div class="hidden">',
+      '#suffix' => '</div>',
     ];
 
     $form['form-wrapper']['step_2']['city'] = [
       '#type' => 'textfield',
       '#title' => $this->t('City'),
-      '#required' => TRUE,
+      '#required' => ($step == 2)? TRUE:FALSE,
+    ];
+
+    $form['form-wrapper']['step_2']['email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('E-mail'),
+      '#required' => ($step == 2)? TRUE:FALSE,
     ];
 
     $form['form-wrapper']['step_2']['phone'] = [
@@ -138,21 +146,54 @@ class UsrCreateForm extends FormBase {
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
-
-    /*$title = $form_state->getValue('title');
-
-    if (strlen($title) < 10) {
-      $form_state->setErrorByName('title', $this->t('The title must be at least 10 characters long.'));
-    }*/
+    $birthday = $form_state->getValue('birthday');
+    if(strtotime($birthday) > strtotime(date('m/d/Y'))){
+      $form_state->setErrorByName('birthday', $this->t('<b>Date of Birth</b> must not be a future date.'));
+    }
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $usr = \Drupal\user\Entity\User::create();
+    $username = $this->sanitize($form_state->getValue('first_name').$form_state->getValue('last_name'));
+
+    $ids = \Drupal::entityQuery('user')
+      ->condition('name', $username)
+      ->range(0, 1)
+      ->execute();
+    if(!empty($ids)){
+      $i = 0;
+      while (!empty($ids)) {
+        $i++;
+        $username = $this->sanitize($form_state->getValue('first_name').$form_state->getValue('last_name').$i);
+        $ids = \Drupal::entityQuery('user')
+          ->condition('name', $username)
+          ->range(0, 1)
+          ->execute();
+      }
+    }
+
+    $usr->setPassword($username);
+    $usr->enforceIsNew();
+    $usr->setEmail($form_state->getValue('email'));
+    $usr->setUsername($username);
+
+    $usr->set("field_usr_first_name", $form_state->getValue('first_name'));
+    $usr->set("field_usr_last_name", $form_state->getValue('last_name'));
+    $usr->set("field_usr_gender", $form_state->getValue('gender'));
+    $usr->set("field_usr_birthday", $form_state->getValue('birthday'));
+    $usr->set("field_usr_city", $form_state->getValue('city'));
+    $usr->set("field_usr_phone", $form_state->getValue('phone'));
+    $usr->set("field_usr_address", $form_state->getValue('address'));
+
+    $usr->activate();
+    $res = $usr->save();
+
     $messenger = \Drupal::messenger();
-    $messenger->addMessage('Success');
-    //$messenger->addMessage('Title: '.$form_state->getValue('title'));
+    $messenger->addMessage("The user has been created with 'username' and 'password': ".$username);
+  }
 
-    //$form_state->setRedirect('/usrform/create');
-
-  } 
+  private function sanitize($str){
+    return preg_replace('/[^A-Za-z0-9]/', '', strtolower($str));
+  }
 
 }
