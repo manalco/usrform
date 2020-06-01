@@ -1,0 +1,7 @@
+usrform.usr_create_form:
+  path: '/usrform/create'
+  defaults:
+    _form: 'Drupal\usrform\Form\UsrCreateForm'
+    _title: 'Custom User Creation Form'
+  requirements:
+    _permission: 'access content'
